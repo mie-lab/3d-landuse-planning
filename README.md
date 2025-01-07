@@ -50,7 +50,9 @@ This repository provides a comprehensive framework for modeling and analyzing al
          ├── plots.nq                       # Singapore’s plot data in RDF format
          ├── development_control_plans.xlsx # Digitized development control plan regulations (from URA website)
          ├── road_network/                  # Contains Singapore’s road network Shaprefile
-      └── output/                           # All generated data from this workflow is stored here
+      ├── output/                           # All generated data from this workflow is stored here
+         ├── analysis/                      # Contains output tabular data and plots for the 3D landuse paper
+         ├── scenarios/                     # N-quads generated if scenario=true
       
     ```
 - data_submission/input/: Contains the essential input files (e.g., planning regulation geometries, Masterplan plot data [[4]](#references), road network [[5]](#references), etc.).
@@ -58,9 +60,9 @@ This repository provides a comprehensive framework for modeling and analyzing al
 
 ## Data and Reproducibility:
 
-   - Intermediate input data specific to this workflow can be [downloaded](TBD) and should be placed in the `data_submission/input/` folder to match the directory structure above.
-   - Some of the intermediate data provided is not readily reproducible because it was generated using the [The World Avatar](https://github.com/cambridge-cares/TheWorldAvatar) infrastructure as part of the [Cities Knowledge Graph (CKG)](https://github.com/cambridge-cares/CitiesKG) project, with its creation documented in other sources [[1,2,3]](#references). Reproducing this data requires a comprehensive setup and close coordination with researchers from both projects.
-   - Reproducibility workflow has been tested on Windows operating system, Lenovo ThinkPad X1 (12th Gen Intel(R) Core(TM) i7-1260P 2.10 GHz).
+   - Intermediate input data specific to this workflow can be [downloaded](https://doi.org/10.5281/zenodo.14590537) and should be placed in the `data_submission/input/` folder to match the directory structure above.
+   - Some of the intermediate data was generated using [The World Avatar](https://github.com/cambridge-cares/TheWorldAvatar) infrastructure as part of the [Cities Knowledge Graph (CKG)](https://github.com/cambridge-cares/CitiesKG) project, with its creation documented in other sources [[1,2,3]](#references). Reproducing this data requires a comprehensive setup and close coordination with researchers from both projects.
+   - The full workflow has been tested on Windows operating system, Lenovo ThinkPad X1 (12th Gen Intel(R) Core(TM) i7-1260P 2.10 GHz) and may take several hours.
 
 ## Knowledge Graph Setup:
 
@@ -76,7 +78,7 @@ This repository provides a comprehensive framework for modeling and analyzing al
  The Blazegraph UI have several tabs (e.g., QUERY, UPDATE, NAMESPACE, etc.) that can be used to interact with the KG in a UI. For details refer to official [Blazegraph Wiki](https://github.com/blazegraph/database/wiki) 
  
  **IMPORTANT**: to set up the blazegraph for full reproducibility of the semantic regulatory dataset and allowable GFAs dataset, follow the **Full Workflow** instructions section. This process involves several steps and took approximately 4 hours to complete on the test machine.
- To set up blazegraph for 3D landuse paper reproducibility, follow the  **Paper Results Reproducibility Workflow** instructions section.
+ To set up blazegraph for 3D landuse paper reproducibility, follow the  **Paper Results Reproducibility Workflow** instructions section. 
 
 ## Full Workflow:
 
@@ -90,6 +92,7 @@ The workflow consists of subprocesses executed via `main.py`. Follow these steps
    ```
    ├── plots                       # Plot geometry n-quads
    ├── regulations                 # Planning-regulation-related n-quods
+   ├── regulations_height_change   # Planning-regulation-related n-quods (if scenario=true in the config.ini)
    ├── height_control_plan_geom    # Height Control Plan geometry n-quads
    ├── planning_boundary_geom      # Planning Boundaries geometry n-quads
    ├── urban_design_areas_geom     # Urban Design Areas geometry n-quads
@@ -125,7 +128,13 @@ The workflow consists of subprocesses executed via `main.py`. Follow these steps
     python main.py estimate-allowable-gfas
     ```
 
-6. **Perform Regulatory Analysis**:
+6. **Optional** - Height Control Plan change scenario:
+   Set `scenario=true` in the `config.ini` file and run the following to generate allowable GFA n-quads for a specific scenario.
+    ```
+    python main.py estimate-allowable-gfas
+    ```
+
+7. **Perform Regulatory Analysis**:
     Run the following to generate figures and tables for the 3D landuse planning paper.
     ```
     python main.py perform-regulatory-analysis
@@ -134,6 +143,7 @@ The workflow consists of subprocesses executed via `main.py`. Follow these steps
 ## Paper Results Reproducibility Workflow:
 
 The workflow consists of subprocesses executed via `main.py`. Follow these steps to reproduce the 3D landuse planning paper tables and figures.
+-  In addition to the input data upload, [download](TBD) the output data generated by the full workflow and place it in the `data_submission/output/` folder.
 
 1. **Setup Blazegraph Namespaces:** 
    ```
@@ -142,8 +152,9 @@ The workflow consists of subprocesses executed via `main.py`. Follow these steps
 
    In the Blazegraph UI ensure the Blazegraph namespace structure matches the following:
    ```
-   ├── plots                    # Plot geometry n-quads 
-   ├── regulations              # Planning-regulation-related n-quods
+   ├── plots                      # Plot geometry n-quads 
+   ├── regulations                # Planning-regulation-related n-quods
+   ├── regulations_height_change  # Planning-regulation-related n-quods for a height control change scenario
    ```
 
 2. **Perform Regulatory Analysis**:
