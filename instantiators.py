@@ -10,9 +10,7 @@ logger = logging.getLogger(__name__)
 '''--------------------------------INSTANTIATE REGULATIONS----------------------------------'''
 
 
-def instantiate_height_control(endpoint,
-                               out_dir,
-                               out_endpoint=None):
+def instantiate_height_control(endpoint, out_dir, out_endpoint=None):
     """
     Query height control city object IDs and instantiate height control regulation content.
 
@@ -54,9 +52,7 @@ def instantiate_height_control(endpoint,
     logger.info(f"{len(qr)} height control items have been instantiated.")
 
 
-def instantiate_conservation_areas(endpoint,
-                                   out_dir,
-                                   out_endpoint=None):
+def instantiate_conservation_areas(endpoint, out_dir, out_endpoint=None):
     """
     Query city object IDs for conservation areas and instantiate related regulation content.
 
@@ -187,9 +183,7 @@ def instantiate_monuments(endpoint, out_dir, out_endpoint=None):
     logger.info(f"{len(qr)} monument items have been instantiated.")
 
 
-def instantiate_landed_housing_areas(endpoint,
-                                     out_dir,
-                                     out_endpoint=None):
+def instantiate_landed_housing_areas(endpoint, out_dir, out_endpoint=None):
     """
     Query and instantiate Landed Housing Area regulation content.
 
@@ -234,9 +228,7 @@ def instantiate_landed_housing_areas(endpoint,
     logger.info(f"{len(qr)} Landed housing items have been instantiated.")
 
 
-def instantiate_street_block_plan(endpoint,
-                                  out_dir,
-                                  out_endpoint=None):
+def instantiate_street_block_plan(endpoint, out_dir, out_endpoint=None):
     """
     Query and instantiate Street Block Plan regulation content.
 
@@ -247,7 +239,8 @@ def instantiate_street_block_plan(endpoint,
 
     q = """
     PREFIX ocgml: <http://www.theworldavatar.com/ontology/ontocitygml/citieskg/OntoCityGML.owl#>
-    SELECT ?city_obj ?front_setback ?side_setback ?rear_setback ?partywall_setback ?storeys ?gpr ?ext_ref ?allowed_programmes ?landuse ?name
+    SELECT ?city_obj ?front_setback ?side_setback ?rear_setback ?partywall_setback ?storeys ?gpr ?ext_ref 
+    ?allowed_programmes ?landuse ?name
     WHERE {GRAPH <http://www.theworldavatar.com:83/citieskg/namespace/singaporeEPSG4326/sparql/cityobjectgenericattrib/> 
     { 
     ?attr_0 ocgml:cityObjectId ?city_obj ; 
@@ -327,9 +320,7 @@ def instantiate_street_block_plan(endpoint,
     logger.info(f"{len(qr)} Street Block Plan items have been instantiated.")
 
 
-def instantiate_urban_design_areas(endpoint,
-                                   out_dir,
-                                   out_endpoint=None):
+def instantiate_urban_design_areas(endpoint, out_dir, out_endpoint=None):
     """
     Query and instantiate Urban Design Areas regulation content.
 
@@ -362,10 +353,7 @@ def instantiate_urban_design_areas(endpoint,
     logger.info(f"{len(qr)} Urban Design Area items have been instantiated.")
 
 
-def instantiate_urban_design_guidelines(endpoint,
-                                        uda,
-                                        out_dir,
-                                        out_endpoint):
+def instantiate_urban_design_guidelines(endpoint, uda, out_dir, out_endpoint=None):
     """
     Queries and instantiates Urban Design Guidelines regulation content.
 
@@ -472,7 +460,8 @@ def instantiate_development_control_plans(cp, lha, pb, out_dir, out_endpoint=Non
                       'for_fringe_plot': cp.loc[i, 'for_fringe_plot'],
                       'in_landed_housing_area': cp.loc[i, 'in_landed_housing_area'],
                       'in_planning_boundary': cp.loc[i, 'in_planning_boundary'],
-                      'in_central_area': cp.loc[i, 'in_central_area']}
+                      'in_central_area': cp.loc[i, 'in_central_area'],
+                      'ext_ref': cp.loc[i, 'ext_ref']}
 
         if cp.loc[i, 'zone'] == 'EducationalInstitution':
             dataset.create_control_plan_triples(parameters, lha, pb, (road_buff_30_uris + road_buff_24_uris))
@@ -518,7 +507,7 @@ def instantiate_development_control_plans(cp, lha, pb, out_dir, out_endpoint=Non
     logger.info(f"{len(cp)} Control Development Plans items have been instantiated.")
 
 
-def instantiate_type_regulation_overlaps(type_regs, out_dir, out_endpoint):
+def instantiate_type_regulation_overlaps(type_regs, out_dir, out_endpoint=None):
     """
     Write generated triples representing the overlap between plots and type-based regulations into an N-Quads file.
 
@@ -546,7 +535,7 @@ def instantiate_area_regulation_overlaps(endpoint_plots,
                                          endpoint_street_block_plan,
                                          endpoint_urban_design_guidelines,
                                          out_dir,
-                                         out_endpoint
+                                         out_endpoint=None
                                          ):
     """
     Instantiates triples for regulation overlaps by querying multiple regulation SPARQL endpoints
@@ -593,7 +582,7 @@ def instantiate_area_regulation_overlaps(endpoint_plots,
 '''------------------------------------INSTANTIATE PLOT PROPERTIES---------------------------------'''
 
 
-def instantiate_plot_property_triples(plots, road_network, out_dir, out_endpoint):
+def instantiate_plot_property_triples(plots, road_network, out_dir, out_endpoint=None):
     """
     Writes generated residential and road plot property triples into an N-Quads file.
 
