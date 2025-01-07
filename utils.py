@@ -36,6 +36,7 @@ def get_query_result(endpoint, query):
 def string_to_polygon(geom_string, geodetic=False, flip=True):
     """
     The function process queried geometries in the KG datatype and transforms it into WKT.
+
     :param geom_string: geometry string as stored in the KG.
     :param geodetic: boolean indicating whether the coordinate reference system is in degrees or metres.
     :param flip: boolean indicating whether original x and y coordinates are in wrong order.
@@ -99,14 +100,12 @@ def get_neighbor_links(plots):
     :param plots: GeoDataFrame containing plot geometries and their identifiers.
     :return: GeoDataFrame containing links between neighboring plots.
     """
-    all_plots = plots[['plots', 'geometry']].rename(columns={'plots': 'context_plots'})
+    context_plots = plots[['plots', 'geometry']].rename(columns={'plots': 'context_plots'})
     plots['geometry'] = plots.buffer(2, cap_style=3)
 
-    intersection = gpd.overlay(plots, all_plots, how='intersection', keep_geom_type=True)
+    intersection = gpd.overlay(plots, context_plots, how='intersection', keep_geom_type=True)
     intersection['area'] = intersection.area
-    neighbor_links = intersection.loc[lambda df: df['area'] > 1]
-
-    logger.info(f"{len(neighbor_links)} neighbor relationships derived")
+    neighbor_links = intersection.loc[lambda df: df['area'] > 1].drop_duplicates()
 
     return neighbor_links
 
@@ -240,7 +239,7 @@ def set_min_rect_edge_types(intersection, edges, plots):
     :return: A DataFrame with updated plot details including front, rear, and side edge indices.
     """
 
-    # define a front edge indice based on largest intersection with the longest edge.
+    # define a front edge indices based on largest intersection with the longest edge.
     front_edge = (intersection
                   .sort_values(by=['plots_1', 'intersection_area', 'length'], ascending=False)
                   .groupby(['plots_1'])['order']
@@ -282,10 +281,13 @@ def is_corner_plot(intersection, min_rect_plots, overlap_ratio):
     :return: A DataFrame with an additional column 'is_corner_plot' indicating whether a plot is a corner plot.
     """
 
-    road_edges = intersection.loc[(intersection['intersection_area'] / intersection['buffered_area']) > overlap_ratio].groupby('plots_1')['order'].unique()
+    road_edges = (intersection.loc[(intersection['intersection_area'] / intersection['buffered_area']) > overlap_ratio]
+                  .groupby('plots_1')['order']
+                  .unique()
+                  )
     road_edges = (pd.merge(road_edges, min_rect_plots.loc[:, ['plots', 'min_rect_rear_edge']]
-                           .set_index('plots'), how='left', right_index=True, left_index=True))
-
+                           .set_index('plots'), how='left', right_index=True, left_index=True)
+                  )
     road_edges.loc[:, 'min_rect_rear_edge'] = road_edges['min_rect_rear_edge'].astype(int)
     min_rect_plots = (min_rect_plots
                       .merge(road_edges.apply(is_corner_plot_helper, axis=1)
@@ -295,6 +297,12 @@ def is_corner_plot(intersection, min_rect_plots, overlap_ratio):
 
 
 def is_corner_plot_helper(road_edge_row):
+    """
+    Determines if a plot is a corner plot based on its road edge configuration.
+
+    :param road_edge_row: A pandas Series representing a row of road edge data.
+    :return: True if the plot is a corner plot, False otherwise.
+    """
     return len(set(road_edge_row.loc['order']).difference([road_edge_row.loc['min_rect_rear_edge']])) > 1
 
 
@@ -485,6 +493,7 @@ def find_allowed_residential_types(plots, road_list):
         return allowed
 
     plots['allowed_residential_types'] = plots.apply(determine_allowed_types, axis=1)
+
     return plots
 
 
@@ -559,6 +568,7 @@ def link_type_regulations_to_plots(regs, plots, road_list):
         reg_plots.append(plots.loc[applies_to, 'plots'].tolist())
 
     regs['applies_to'] = reg_plots
+
     return regs
 
 
@@ -575,14 +585,7 @@ def get_context_gpr(neighbours, gpr_map):
     return round(neighbour_gprs.mean(), 1) if not neighbour_gprs.empty else np.nan
 
 
-def assign_zone_gpr(plots,
-                    zone_type,
-                    lha,
-                    reg_links,
-                    in_lha_gpr,
-                    fringe_gpr,
-                    in_context_gpr,
-                    fringe_storeys,
+def assign_zone_gpr(plots, zone_type, lha, reg_links, in_lha_gpr, fringe_gpr, in_context_gpr, fringe_storeys,
                     context_storeys):
     """
     The function writes missing GPR values for educational, religious and civic plots.
@@ -606,7 +609,7 @@ def assign_zone_gpr(plots,
 
     reg_links_map = reg_links.groupby('plots')
     neighbour_map = plots.set_index('plots')['neighbour']
-    gpr_map = plots.set_index('plots')['gpr']
+    gpr_map = plots.loc[~plots['plots'].duplicated(keep='first')].set_index('plots')['gpr']
     plots['gpr'] = plots.get('gpr', np.nan)
     plots['context_storeys'] = plots.get('context_storeys', np.nan)
 
@@ -669,12 +672,13 @@ def assign_sbp_gpr(plots, sbp, reg_links):
 
 def assign_gpr(plots, lha, sbp, reg_links):
     """
+    Assigns GPR to plots based on different zoning categories and regulations.
 
-    :param plots:
-    :param lha:
-    :param sbp:
-    :param reg_links:
-    :return:
+    :param plots: The dataset or structure containing plot information.
+    :param lha: Land Holding Areas Dataframe.
+    :param sbp:  STreet Block Plan Dataframe.
+    :param reg_links:Links between regulations and plots.
+    :return: The modified dataset or structure of plots with updated GPR values.
     """
     plots = assign_zone_gpr(plots, 'PlaceOfWorship', lha, reg_links, 1., 1.4, 1.6, 4, 5)
     plots = assign_zone_gpr(plots, 'EducationalInstitution', lha, reg_links, 1., 1., 1.4, 3, 4)
@@ -780,9 +784,6 @@ def get_min_rect_edges(sbp_plots):
 def classify_min_rect_edges(min_rect_edge_df, plots, roads):
     """
     The function classifies minimum bounding rectangle edges into front, side, and rear.
-    The function first identifies the front edge - an edge that overlaps most with the road.
-    Other edges can be interpolated from there on.
-    Applicable only to min_rect_edges of plots that are in StreetBlockPlans.
 
     :param min_rect_edge_df: GeoDataFrame containing every plot's every edge.
     :param plots: Singapore's Masterplan 2019 plots GeoDataFrame queried from the KG.
@@ -836,7 +837,6 @@ def classify_min_rect_edges(min_rect_edge_df, plots, roads):
 def classify_neighbours(sbp_plots, plots, min_rect_edge_df):
     """
     The function classifies neighbours based on overlap with corresponding classified minimum bounding rectangle edges.
-    Applicable only to plots that are in StreetBlockPlans.
 
     :param sbp_plots: filtered plots GeoDataFrame for plots that fall in Street Block Plan areas.
     :param plots: Singapore's Masterplan 2019 plots GeoDataFrame queried from the KG.
@@ -880,6 +880,15 @@ def classify_neighbours(sbp_plots, plots, min_rect_edge_df):
 
 
 def classify_street_block_plan_plots(gfa_plots, plots, reg_links, road_plots):
+    """
+    Classifies plots based on the street block plan and their geometric and neighbor properties.
+
+    :param gfa_plots: filtered plots GeoDataFrame for which gfa should be estimated.
+    :param plots: Singapore's Masterplan 2019 plots GeoDataFrame queried from the KG.
+    :param reg_links: Regulatory links or mapping information, including regulations and plot associations.
+    :param road_plots: filtered plot GeoDataFrame containing only road plots.
+    :return: plots in Street Block Plan enriched with classified neighbours.
+    """
     sbp_plots_ids = list(reg_links[reg_links['reg_type'] == 'StreetBlockPlan']['plots'].unique())
     sbp_plots = gfa_plots[gfa_plots['plots'].isin(sbp_plots_ids)]
     sbp_plots, min_rect_edge_df = get_min_rect_edges(sbp_plots)
@@ -892,7 +901,6 @@ def classify_street_block_plan_plots(gfa_plots, plots, reg_links, road_plots):
 def classify_plot_edges(gfa_plots, sbp_plots, plots, edges):
     """
     The function classifies plot edges into front, side and rear based on overlap with classified neighbours.
-    Applicable only to plots that are in StreetBlockPlans.
 
     :param sbp_plots: filtered plots GeoDataFrame for plots that fall in Street Block Plan areas.
     :param gfa_plots: filtered plots GeoDataFrame for which gfa should be estimated.
@@ -1158,7 +1166,6 @@ def create_setback_area(edges, edge_setbacks, plot_geom):
 def get_buildable_footprints(gfa_plots):
     """
     Function to generate a list of buildable footprints for every unique/known setback storey.
-    Position in the list indicates at which floor that footprint exists.
 
     :param gfa_plots: filtered plots GeoDataFrame for which GFA should be estimated.
     :return: a modified plots GeoDataFrame with a list of footprints.
