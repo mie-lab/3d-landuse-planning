@@ -287,12 +287,7 @@ class TripleDataset:
                 self.dataset.add((landed_housing_area, GFAOntoManager.ALLOWS_PROGRAMME, terrace_type_2,
                                   GFAOntoManager.ONTO_PLANNING_REGULATIONS_GRAPH))
 
-    def create_setback_triples(self,
-                               city_obj,
-                               setback,
-                               predicate_type,
-                               setback_type,
-                               setback_value):
+    def create_setback_triples(self, city_obj, setback, predicate_type, setback_type, setback_value):
         """
         Generates triples to represent a setback and adds them to the triple dataset.
 
@@ -318,13 +313,7 @@ class TripleDataset:
                           Literal(str(setback_value), datatype=XSD.double),
                           GFAOntoManager.ONTO_PLANNING_REGULATIONS_GRAPH))
 
-    def create_setback_collection(self,
-                                  city_obj,
-                                  setbacks,
-                                  storey,
-                                  storey_level,
-                                  predicate_type,
-                                  setback_type,
+    def create_setback_collection(self, city_obj, setbacks, storey, storey_level, predicate_type, setback_type,
                                   height_provided):
         """
         Generates triples for a collection of setbacks and adds them to the triple dataset.
@@ -365,18 +354,8 @@ class TripleDataset:
                     setback = URIRef(GFAOntoManager.BUILDABLE_SPACE_GRAPH + str(uuid.uuid1()))
                     self.create_setback_triples(city_obj, setback, predicate_type, setback_type, current_setback_value)
 
-    def create_street_block_plan_triples(self,
-                                         city_obj,
-                                         height,
-                                         front_setback,
-                                         side_setback,
-                                         rear_setback,
-                                         partywall_setback,
-                                         ext_ref,
-                                         name,
-                                         landuse,
-                                         gpr,
-                                         allowed_programmes):
+    def create_street_block_plan_triples(self, city_obj, height, front_setback, side_setback, rear_setback,
+                                         partywall_setback, ext_ref, name, landuse, gpr, allowed_programmes):
         """
         Generates triples to represent Street Block Plans and adds them to the triple dataset.
 
@@ -483,15 +462,8 @@ class TripleDataset:
         self.dataset.add((urban_design_area, GFAOntoManager.HAS_NAME, Literal(str(name.strip()), datatype=XSD.string),
                           GFAOntoManager.ONTO_PLANNING_REGULATIONS_GRAPH))
 
-    def create_urban_design_guidelines_triples(self,
-                                               city_obj,
-                                               ext_ref,
-                                               partywall_setback,
-                                               height,
-                                               setback,
-                                               additional_type,
-                                               area,
-                                               urban_design_areas):
+    def create_urban_design_guidelines_triples(self, city_obj, ext_ref, partywall_setback, height, setback,
+                                               additional_type, area, urban_design_areas):
         """
         Generates triples to represent the Urban Design Guidelines and adds them to the triple dataset.
 
@@ -679,10 +651,7 @@ class TripleDataset:
         self.dataset.add((measure, GFAOntoManager.HAS_NUMERIC_VALUE, gfa,
                           GFAOntoManager.ONTO_PLANNING_REGULATIONS_GRAPH))
 
-    def create_control_plan_triples(self,
-                                    parameters,
-                                    landed_housing_areas,
-                                    planning_boundaries,
+    def create_control_plan_triples(self, parameters, landed_housing_areas, planning_boundaries,
                                     road_buffer_uris):
         """
         Generates triples to represent non-residential development control plans and adds them to the triple dataset.
@@ -695,8 +664,11 @@ class TripleDataset:
         """
 
         control_plan = URIRef(GFAOntoManager.ONTO_PLANNING_REGULATIONS_GRAPH + str(uuid.uuid1()))
+        ext_ref_uri = URIRef(str(parameters['ext_ref'].strip()))
 
         self.dataset.add((control_plan, RDF.type, GFAOntoManager.DEVELOPMENT_CONTROL_PLAN,
+                          GFAOntoManager.ONTO_PLANNING_REGULATIONS_GRAPH))
+        self.dataset.add((control_plan, GFAOntoManager.HAS_EXTERNAL_REF, ext_ref_uri,
                           GFAOntoManager.ONTO_PLANNING_REGULATIONS_GRAPH))
         for i in parameters['zone']:
             zone_uri = URIRef(GFAOntoManager.ONTO_ZONING_URI_PREFIX + i)
@@ -791,10 +763,7 @@ class TripleDataset:
                 self.dataset.add((control_plan, GFAOntoManager.IS_CONSTRAINED_BY, i,
                                   GFAOntoManager.ONTO_PLANNING_REGULATIONS_GRAPH))
 
-    def create_road_category_triples(self,
-                                     road_buffer_dict,
-                                     storeys=None,
-                                     function=GFAOntoManager.MAXIMUM):
+    def create_road_category_triples(self, road_buffer_dict, storeys=None, function=GFAOntoManager.MAXIMUM):
         """
         Generates necessary triples to represent Road Category regulation triples.
 
