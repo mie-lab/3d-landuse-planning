@@ -551,7 +551,7 @@ def get_neighbours(plots, endpoint):
     """
 
     plot_neighbours = get_query_result(endpoint, q)
-    plot_neighbours = plot_neighbours.groupby(by='plots')['neighbour'].apply(list)
+    plot_neighbours = plot_neighbours.groupby(by='plots')['neighbour'].apply(set)
     plots = plots.merge(plot_neighbours, left_on='plots', right_index=True, how='left')
 
     logger.info("Neighbors retrieved from the KG and set.")
@@ -713,17 +713,40 @@ def get_plot_properties(plots, endpoint):
     q = """
     PREFIX obs: <http://www.theworldavatar.com/ontology/ontobuildablespace/OntoBuildableSpace.owl#>
     PREFIX om: <http://www.ontology-of-units-of-measure.org/resource/om-2/>
-    PREFIX oz: <http://www.theworldavatar.com/ontology/ontozoning/OntoZoning.owl#>
-    SELECT ?plots ?corner_plot ?fringe_plot ?zone ?road_type
-    WHERE {
-    ?plots oz:hasZone ?zone_uri .
-    BIND(STRAFTER(STR(?zone_uri), '#') AS ?zone)
-    OPTIONAL { ?plots obs:isCornerPlot ?corner_plot . }
-    OPTIONAL { ?plots obs:atResidentialFringe ?fringe_plot . }
-    OPTIONAL { ?plots obs:hasRoadType ?road_type . }
-    }
+    SELECT ?plots ?corner_plot ?fringe_plot
+    WHERE { GRAPH <http://www.theworldavatar.com:83/citieskg/namespace/singaporeEPSG4326/sparql/buildablespace/> {
+        OPTIONAL { 
+        ?plots obs:isCornerPlot ?corner_plot . 
+        }
+        OPTIONAL { 
+        ?plots obs:atResidentialFringe ?fringe_plot . 
+        }
+    } }
     """
 
+    qr = get_query_result(endpoint, q)
+    plots = plots.merge(qr, how='left', on='plots')
+
+    q = """
+        PREFIX obs: <http://www.theworldavatar.com/ontology/ontobuildablespace/OntoBuildableSpace.owl#>
+        PREFIX om: <http://www.ontology-of-units-of-measure.org/resource/om-2/>
+        SELECT ?plots ?road_type
+        WHERE { GRAPH <http://www.theworldavatar.com:83/citieskg/namespace/singaporeEPSG4326/sparql/buildablespace/> {
+            ?plots obs:hasRoadType ?road_type . 
+        } }
+        """
+
+    qr = get_query_result(endpoint, q)
+    plots = plots.merge(qr, how='left', on='plots')
+
+    q = """
+    PREFIX oz: <http://www.theworldavatar.com/ontology/ontozoning/OntoZoning.owl#>
+    SELECT ?plots ?zone
+    WHERE { GRAPH <http://www.theworldavatar.com:83/citieskg/namespace/singaporeEPSG4326/sparql/ontozone/> {
+        ?plots oz:hasZone ?zone_uri . 
+        BIND(STRAFTER(STR(?zone_uri), '#') AS ?zone)
+    } }
+    """
     qr = get_query_result(endpoint, q)
     plots = plots.merge(qr, how='left', on='plots')
 
@@ -742,7 +765,7 @@ def get_regulation_links(endpoint):
     q = """
     PREFIX opr: <http://www.theworldavatar.com/ontology/ontoplanningregulations/OntoPlanningRegulations.owl#>
     SELECT ?plots ?reg ?reg_type
-    WHERE { GRAPH <http://www.theworldavatar.com:83/citieskg/namespace/singaporeEPSG4326/sparql/planningregulations/>  {
+    WHERE { GRAPH <http://www.theworldavatar.com:83/citieskg/namespace/singaporeEPSG4326/sparql/planningregulations/> {
     ?reg opr:appliesTo ?plots ;
          rdf:type ?type . }
     BIND(STRAFTER(STR(?type), '#') AS ?reg_type) } 
@@ -826,11 +849,15 @@ def get_plot_ids(endpoint, reg_id):
     }}
     """
 
-    qr = get_query_result(endpoint, q)['plot'].tolist()
+    qr = get_query_result(endpoint, q)
 
+    if not qr.empty:
+        qr_list = qr['plot'].tolist()
+    else:
+        qr_list = []
     logger.info("Plots linked to a specific regulation retrieved from the KG.")
 
-    return qr
+    return qr_list
 
 
 def get_frequent_regulation_instances(endpoint):
@@ -847,19 +874,31 @@ def get_frequent_regulation_instances(endpoint):
     PREFIX oz: <http://www.theworldavatar.com/ontology/ontozoning/OntoZoning.owl#>
     PREFIX om: <http://www.ontology-of-units-of-measure.org/resource/om-2/>
     PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-
-    SELECT ?reg	
-       ?type
-       (SAMPLE(?programme_name) AS ?programmes)
-       (GROUP_CONCAT(DISTINCT ?zone_name; separator=",") AS ?zones) 
-       (COUNT(DISTINCT ?plot) AS ?plots)
+    SELECT ?reg 
+        ?type
+        (SAMPLE(?programme_name) AS ?programmes)
+        (GROUP_CONCAT(DISTINCT ?zone_name; separator=",") AS ?zones) 
+        (COUNT(DISTINCT ?plot) AS ?plots)
     WHERE { 
     GRAPH <http://www.theworldavatar.com:83/citieskg/namespace/singaporeEPSG4326/sparql/planningregulations/> { 
-        ?reg rdf:type ?t ;
-            opr:appliesTo ?plot .
-        BIND(STRAFTER(STR(?t), '#') AS ?type)
-  
+        ?reg rdf:type ?regType .
+        VALUES ?regType {
+        opr:HeightControlPlan
+        opr:DevelopmentControlPlan
+        opr:ConservationArea
+        opr:CentralArea
+        opr:Monument
+        opr:PlanningBoundary
+        opr:StreetBlockPlan
+        opr:UrbanDesignArea
+        opr:UrbanDesignGuideline
+        opr:LandedHousingArea
+        }
+        BIND(STRAFTER(STR(?regType), "#") AS ?type)
         OPTIONAL { 
+        ?reg opr:appliesTo ?plot .
+        }
+        OPTIONAL {
         ?reg opr:forProgramme ?programme .
         BIND(STRAFTER(STR(?programme), '#') AS ?programme_name)
         }
@@ -867,24 +906,20 @@ def get_frequent_regulation_instances(endpoint):
         ?reg opr:forZoningType ?zone .
         BIND(STRAFTER(STR(?zone), '#') AS ?zone_name)
         }
-    } 
+        OPTIONAL { 
+        ?reg opr:forPlotsInGooClassBungalowArea ?in_gcba .
+        } 
     }
-    GROUP BY ?reg ?type
+    }
+    GROUP BY ?reg ?type ?programme_name
     ORDER BY DESC(?plots)
     """
 
     qr = get_query_result(endpoint, q)
 
-    sampled_regs = qr.drop(columns=['reg']).drop_duplicates().merge(
-        qr[['reg']],
-        left_index=True,
-        right_index=True,
-        how='left'
-    )
-
     logger.info("Frequent regulations retrieved from the KG.")
 
-    return sampled_regs
+    return qr
 
 
 def get_gfas(endpoint):
