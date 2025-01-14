@@ -1,6 +1,6 @@
 # 3D Land Use Planning
 
-This repository provides a comprehensive framework for modeling and analyzing allowable Gross Floor Area (GFA) under Singapore’s planning regulations using semantic web ontologies such as **OntoPlanningRegulations** and **OntoBuildableSpace**. It integrates data instantiation, regulatory analysis, and visualization in a single environment, supporting 3D land-use planning and insights into allowable GFA based on various zoning policies.
+This repository provides a comprehensive framework for modeling and analyzing allowable Gross Floor Area (GFA) under Singapore’s planning regulations using semantic web ontologies such as **OntoPlanningRegulations** and **OntoBuildableSpace**. It integrates data instantiation, regulatory analysis, and visualization in a single environment, supporting 3D land-use planning and insights into allowable GFA based on various zoning policies. Ontology OWL files can be downloaded from [here](https://doi.org/10.5281/zenodo.14585554).
 
 **Key objectives:**
 
@@ -44,7 +44,7 @@ This repository provides a comprehensive framework for modeling and analyzing al
    ├── analysis.py                          # Functions to analyze data and generate visualizations
    ├── GFAOntoManager.py                    # Schema manager for ontologies related to zoning and planning
    └── data_submission/                     # Contains intermediate input or generated output data
-      ├── input/                            # intermediate data necessary for full workflow reproducibility
+      ├── input/                            # Intermediate data necessary for full workflow reproducibility
          ├── area_regulation_geometry/      # Contains geometries of area-based subset of planning regulations
          ├── output_onto_zoning_plots.nq    # Singapore’s 2019 Masterplan zoning data in RDF format
          ├── plots.nq                       # Singapore’s plot data in RDF format
@@ -52,7 +52,7 @@ This repository provides a comprehensive framework for modeling and analyzing al
          ├── road_network/                  # Contains Singapore’s road network Shaprefile
       ├── output/                           # All generated data from this workflow is stored here
          ├── analysis/                      # Contains output tabular data and plots for the 3D landuse paper
-         ├── scenarios/                     # N-quads generated if scenario=true
+         ├── scenarios/                     # N-quads generated if scenario=true in the config.ini.
       
     ```
 - data_submission/input/: Contains the essential input files (e.g., planning regulation geometries, Masterplan plot data [[4]](#references), road network [[5]](#references), etc.).
@@ -60,8 +60,8 @@ This repository provides a comprehensive framework for modeling and analyzing al
 
 ## Data and Reproducibility:
 
-   - Intermediate input data specific to this workflow can be [downloaded](https://doi.org/10.5281/zenodo.14590537) and should be placed in the `data_submission/input/` folder to match the directory structure above.
-   - Some of the intermediate data was generated using [The World Avatar](https://github.com/cambridge-cares/TheWorldAvatar) infrastructure as part of the [Cities Knowledge Graph (CKG)](https://github.com/cambridge-cares/CitiesKG) project, with its creation documented in other sources [[1,2,3]](#references). Reproducing this data requires a comprehensive setup and close coordination with researchers from both projects.
+   - Intermediate input data specific to this workflow can be [downloaded](https://doi.org/10.5281/zenodo.14647555) and should be placed in the `data_submission/input/` folder to match the directory structure above.
+   - Some of the intermediate data was generated using _blinded for peer review_ infrastructure as part of the _blinded for peer review_ project, with its creation documented in other sources [[1,2,3]](#references). Reproducing this data requires a comprehensive setup and close coordination with researchers from both projects.
    - The full workflow has been tested on Windows operating system, Lenovo ThinkPad X1 (12th Gen Intel(R) Core(TM) i7-1260P 2.10 GHz) and may take several hours.
 
 ## Knowledge Graph Setup:
@@ -74,11 +74,10 @@ This repository provides a comprehensive framework for modeling and analyzing al
   java -server -Xmx16g -jar blazegraph.jar
   ```
    
- Then open the running local Blazegraph instance URL in a browser window, e.g., `http://127.0.0.1:9999/blazegraph/`. 
- The Blazegraph UI have several tabs (e.g., QUERY, UPDATE, NAMESPACE, etc.) that can be used to interact with the KG in a UI. For details refer to official [Blazegraph Wiki](https://github.com/blazegraph/database/wiki) 
- 
- **IMPORTANT**: to set up the blazegraph for full reproducibility of the semantic regulatory dataset and allowable GFAs dataset, follow the **Full Workflow** instructions section. This process involves several steps and took approximately 4 hours to complete on the test machine.
- To set up blazegraph for 3D landuse paper reproducibility, follow the  **Paper Results Reproducibility Workflow** instructions section. 
+ Check that the **port** in the running local Blazegraph instance URL, e.g., `http://127.0.0.1:9999/blazegraph/` matches the port of the `in_endpoint` key in the `config.ini` file.  
+
+ **IMPORTANT**: to set up the blazegraph for full reproducibility of the semantic regulatory dataset and allowable GFAs dataset, follow the [Full Workflow](#full-workflow) instructions section. This process involves several steps and took approximately 4 hours to complete on the test machine.
+ To set up blazegraph for 3D landuse paper reproducibility, follow the  [Paper Results Reproducibility Workflow](#paper-results-reproducibility-workflow) instructions section. 
 
 ## Full Workflow:
 
@@ -140,10 +139,11 @@ The workflow consists of subprocesses executed via `main.py`. Follow these steps
     python main.py perform-regulatory-analysis
     ```
 
+In addition to storing n-quad data in the KG, it is also stored in the `output/` and `output/analysis` directory.
 ## Paper Results Reproducibility Workflow:
 
 The workflow consists of subprocesses executed via `main.py`. Follow these steps to reproduce the 3D landuse planning paper tables and figures.
--  In addition to the input data upload, [download](https://doi.org/10.5281/zenodo.14646814) the output data generated by the full workflow and place it in the `data_submission/output/` folder.
+-  In addition to the input data upload, [download](https://doi.org/10.5281/zenodo.14646814) the output data generated by the full workflow and place it in the `data_submission/output/` folder. Note that setting up the blazegraph with all necessary data can take some time up to an hour.
 
 1. **Setup Blazegraph Namespaces:** 
    ```
@@ -158,9 +158,11 @@ The workflow consists of subprocesses executed via `main.py`. Follow these steps
    ```
 
 2. **Perform Regulatory Analysis**:
+   Run the following to generate figures and tables for the 3D landuse planning paper.
    ```
    python main.py perform-regulatory-analysis
    ```
+Analysis output names in the `output/analysis` directory correspond to tables and figures in the related paper. 
 
 ## Tips and Troubleshooting:
 
@@ -168,18 +170,16 @@ The workflow consists of subprocesses executed via `main.py`. Follow these steps
 - We provide example queries [here](https://polybox.ethz.ch/index.php/s/MHUMJcJ8YFGOLJX) that can be used to test and explore the uploaded data. 
 - For namespace-specific issues, consult the Blazegraph wiki or ensure proper SPARQL endpoint connectivity.
 
-
 ## Acknowledgements:
-
-This work is part of the Cities Knowledge Graph (CKG) project, an Intra-CREATE collaborative project involving CARES (Cambridge Centre for Advanced Research and Education in Singapore), which is University of Cambridge’s presence in Singapore, and the Singapore-ETH Centre, which was established collaboratively between ETH Zurich and the National Research Foundation Singapore. We acknowledge contributions of the CKG team, in particular Shiying Li, Arkadiusz Chadzynski, Heidi Silvennoinen, Chenyi Cai, and Markus Kraft. The authors express their sincere gratitude to the officers of Singapore's Urban Redevelopment Authority and Smart Nation Singapore for providing valuable feedback and support.
+_blinded for peer review_
 
 ## References:
 
-[1]: Silvennoinen, H., Chadzynski, A., Farazi, F., Grišiūtė, A., Shi, Z., von Richthofen, A., Cairns, S., Kraft, M., Raubal, M., & Herthogs, P. (2023). A semantic web approach to land use regulations in urban planning: The OntoZoning ontology of zones, land uses and programmes for Singapore. Journal of Urban Management. https://doi.org/10.1016/j.jum.2023.02.002
+[1]: blinded for review
 
-[2]: Grisiute, A., Silvennoinen, H., Li, S., Chadzynski, A., Raubal, M., Kraft, M., Von Richthofen, A., & Herthogs, P. (2023). A Semantic Spatial Policy Model to Automatically Calculate Allowable Gross Floor Areas in Singapore. In M. Turrin, C. Andriotis, & A. Rafiee (Eds.), Computer-Aided Architectural Design. INTERCONNECTIONS: Co-computing Beyond Boundaries (Vol. 1819, pp. 455–469). Springer Nature Switzerland. https://doi.org/10.1007/978-3-031-37189-9_30
+[2]: blinded for review
 
-[3]: Chadzynski, A., Krdzavac, N., Farazi, F., Lim, M. Q., Li, S., Grisiute, A., Herthogs, P., von Richthofen, A., Cairns, S., & Kraft, M. (2021). Semantic 3D City Database—An enabler for a dynamic geospatial knowledge graph. Energy and AI, 6. https://doi.org/10/gmfgm3
+[3]: blinded for review
 
 [4]: Urban Redevelopment Authority. (2019). Master Plan 2019 Land Use layer (2024) [Dataset]. data.gov.sg. Retrieved from https://data.gov.sg/datasets/d_90d86daa5bfaa371668b84fa5f01424f/view
 
