@@ -64,7 +64,7 @@ def get_regulation_instance_overview_df(endpoint, plots, out_dir=None):
     :param endpoint: SPARQL endpoint to query plot details.
     :param plots: GeoDataFrame containing plot information with 'plots' and 'plot_area' columns.
     :param out_dir: Optional; Directory path to save the output CSV file. If None, no file is written.
-    :return: A DataFrame summarizing regulations and their respective plot areas.
+    :return: A DataFrame summarizing 10 most impactful regulations and their respective plot areas.
     """
 
     qr = get_frequent_regulation_instances(endpoint)
@@ -85,7 +85,7 @@ def get_regulation_instance_overview_df(endpoint, plots, out_dir=None):
             'total_area_km': total_area
         })
 
-    df = pd.DataFrame(results)
+    df = pd.DataFrame(results).head(10)
 
     if out_dir:
         output_file = os.path.join(out_dir, 'output_table_3.csv')
@@ -235,7 +235,7 @@ def plot_gfa_deltas(endpoint, plots, non_gfa_plots, out_dir):
     sm = plt.cm.ScalarMappable(norm=norm, cmap=custom_cmap)
     sm.set_array([])
     cbar = plt.colorbar(sm, cax=cbar_ax, orientation='horizontal')
-    cbar.set_label("Relative GFA Δ", fontsize=8)
+    cbar.set_label("Relative GFA Δ (%)", fontsize=8)
     cbar.ax.tick_params(labelsize=8)
 
     # Save the figure
