@@ -152,7 +152,7 @@ def instantiate_area_regulations(config):
                                         regulation_endpoint)
 
     instantiate_area_regulation_overlaps(plots_endpoint, central_area_endpoint, urban_design_areas_endpoint,
-                                         conservation_endpoint, monuments_endpoint,planning_boundaries_endpoint,
+                                         conservation_endpoint, monuments_endpoint, planning_boundaries_endpoint,
                                          height_control_endpoint, landed_housing_areas_endpoint,
                                          street_block_plans_endpoint, urban_design_guidelines_endpoint, out_dir,
                                          regulation_endpoint)
@@ -369,7 +369,7 @@ def perform_overview_analysis(config):
 
     get_gfa_overview(regulation_endpoint, plots, non_gfa_plots, out_dir=out_dir)
 
-    # if scenario present,
+    # if scenario present
     if config.getboolean('scenario', 'scenario'):
         gfa_endpoint = config.get("endpoints", "scenario_endpoint")
         plot_scenario_difference(regulation_endpoint, gfa_endpoint, plots, reg_links, out_dir=out_dir)
