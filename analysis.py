@@ -175,7 +175,7 @@ def plot_iop(plots, reg_links, out_dir):
     # Define boundaries and colormap
     max_reg = reg_links.groupby('plots')['reg'].nunique().max()
     boundaries = np.arange(0, max_reg + 1, 1)  # Ensure the max value is included
-    custom_cmap = LinearSegmentedColormap.from_list('CustomGradient', ["#8FC1B5", "#902925"])
+    custom_cmap = LinearSegmentedColormap.from_list('CustomGradient', ["#AEC2B9", "#902925"])
     norm = BoundaryNorm(boundaries, custom_cmap.N)
 
     # Create the figure and axes
@@ -225,7 +225,7 @@ def plot_gfa_deltas(endpoint, plots, non_gfa_plots, out_dir):
     delta_max = gfa_plots['gpr_gfa_delta'].max()
     norm = plt.Normalize(vmin=delta_min, vmax=delta_max)
 
-    custom_cmap = LinearSegmentedColormap.from_list('CustomGradient', ["#902925", "#8FC1B5"])
+    custom_cmap = LinearSegmentedColormap.from_list('CustomGradient', ["#902925", "#AEC2B9"])
     fig, ax = plt.subplots(figsize=(6, 6), dpi=150)
     gfa_plots.plot(column='gpr_gfa_delta', cmap=custom_cmap, norm=norm, ax=ax, alpha=0.9)
     ax.tick_params(left=False, bottom=False, labelleft=False, labelbottom=False)
