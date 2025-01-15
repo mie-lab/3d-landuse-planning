@@ -280,7 +280,7 @@ def plot_scenario_difference(endpoint, scenario_endpoint, plots, reg_links, out_
 
     dashed_line = Line2D([0], [0], color="#902925", linestyle="--", linewidth=0.5, label="Affected plot location")
     colors = ["#8FC1B5", "#589A8D", "#007566", "#265C4B"]
-    labels = [f"0-{bins[1]:.2f}", f"{bins[1]:.2f}-{bins[2]:.2f}", f"{bins[2]:.2f}-{bins[3]:.2f}", f">{bins[3]:.2f}"]
+    labels = [f"0-{bins[1]:.2f} (25%)", f"{bins[1]:.2f}-{bins[2]:.2f}(50%)", f"{bins[2]:.2f}-{bins[3]:.2f} (75%)", f">{bins[3]:.2f} (>75%)"]
     cmap = ListedColormap(colors)
     x_min, x_max = hcp_plots.total_bounds[0] + 4000, hcp_plots.total_bounds[2] - 7000
     y_min, y_max = hcp_plots.total_bounds[1] - 800, hcp_plots.total_bounds[3] - 9000
