@@ -21,9 +21,18 @@ This repository provides a comprehensive framework for modeling and analyzing al
 
 ![Overview of the workflow.](resources/workflow.png)
 
+##System Requirements
+- Operating System: Windows (tested on Windows 10/11). For non-Windows users, see the notes below.
+- RAM: Minimum 16 GB (recommended 32 GB for smoother performance).
+- Disk Space: Ensure at least 15 GB of free storage space necessary for generated regulatory datasets.
+- Software:
+  - Python 3.9 or higher 
+  - Conda package manager 
+  - Java 8+ (for Blazegraph)
+
 ## Installation
 
-1. **Setup Environment**  
+1. **Setup Environment for Windows**  
    Ensure you have `Python 3.9` or higher and `conda` is installed.
    Clone the repository and set up the Python environment.
 
@@ -58,12 +67,17 @@ This repository provides a comprehensive framework for modeling and analyzing al
 - data_submission/input/: Contains the essential input files (e.g., planning regulation geometries, Masterplan plot data [[4]](#references), road network [[5]](#references), etc.).
 - data_submission/output/: Stores generated data such as processed RDF outputs, figures, and tables relevant for the 3d landuse planning paper.
 
+ **Note for non-Windows users**:
+- change the path separators from ‘\’ to ‘/’ in `config.ini`. 
+- remove Windows-specific dependencies from `environment.yml`: `msys2-conda-epoch`, `pywin32`, `pywinpty`, `vc`, `win_inet_pton`, `wincertstore`, `winpty`. 
+- A Docker container setup will be provided in the future to mitigate these differences.
+
 ## Data and Reproducibility:
 
    - Intermediate input data specific to this workflow can be [downloaded](https://doi.org/10.5281/zenodo.14647555) and should be placed in the `data_submission/input/` folder to match the directory structure above.
    - Some of the intermediate data was generated using _blinded for peer review_ infrastructure as part of the _blinded for peer review_ project, with its creation documented in other sources [[1,2,3]](#references). Reproducing this data requires a comprehensive setup and close coordination with researchers from both projects.
    - The full workflow has been tested on Windows operating system, Lenovo ThinkPad X1 (12th Gen Intel(R) Core(TM) i7-1260P 2.10 GHz) and may take several hours.
-
+ 
 ## Knowledge Graph Setup:
 
 **Install Blazegraph**:
@@ -83,7 +97,7 @@ This repository provides a comprehensive framework for modeling and analyzing al
 
 The workflow consists of subprocesses executed via `main.py`. Follow these steps to reproduce the generation of regulatory and allowable GFA datasets:
 
-1. **Setup Blazegraph Namespaces:** 
+1. **Setup Blazegraph Namespaces** [Expected runtime: 30 min]: 
    ```
    python main.py setup-blazegraph
    ```
@@ -103,37 +117,37 @@ The workflow consists of subprocesses executed via `main.py`. Follow these steps
    ├── central_area_geom           # Central Area geometry n-quads
    ```
 
-2. **Instantiate Area-Based Regulations**:
+2. **Instantiate Area-Based Regulations** [Expected runtime: 1 min]:
     Run the following to generate area-based planning regulations and its links to plots across Singapore and store it in the KG.
     ```
     python main.py instantiate-area-regulations
     ```
 
-3. **Enrich Plot Data**:
+3. **Enrich Plot Data** [Expected runtime: 45 min]:
     Run the following to generate additional plot property n-quads for plots across Singapore and store it in the KG. This step is relevant for generation of type-based regulations and should not be skipped. 
     ```
     python main.py enrich-plot-data
     ```
 
-4. **Instantiate Type-Based Regulations**:
+4. **Instantiate Type-Based Regulations** [Expected runtime: 1 hour]:
     Run the following to generate n-quads for type-based planning regulations and its links to plots across Singapore and store it in the KG.
     ```
     python main.py instantiate-type-regulations
     ```
 
-5. **Estimate Allowable GFA**:
+5. **Estimate Allowable GFA** [Expected runtime: 1 hour]:
    Run the following to generate allowable GFA n-quads for plots across Singapore and store it in the KG.
     ```
     python main.py estimate-allowable-gfas
     ```
 
-6. **Optional** - Height Control Plan change scenario:
+6. **Optional** - Height Control Plan change scenario [Expected runtime: 1 hour]:
    Set `scenario=true` in the `config.ini` file and run the following to generate allowable GFA n-quads for a specific scenario.
     ```
     python main.py estimate-allowable-gfas
     ```
 
-7. **Perform Regulatory Analysis**:
+7. **Perform Regulatory Analysis** [Expected runtime: 10 min]:
     Run the following to generate figures and tables for the 3D landuse planning paper.
     ```
     python main.py perform-regulatory-analysis
@@ -143,9 +157,9 @@ In addition to storing n-quad data in the KG, it is also stored in the `output/`
 ## Paper Results Reproducibility Workflow:
 
 The workflow consists of subprocesses executed via `main.py`. Follow these steps to reproduce the 3D landuse planning paper tables and figures.
--  In addition to the input data upload, [download](https://doi.org/10.5281/zenodo.14646814) the output data generated by the full workflow and place it in the `data_submission/output/` folder. Note that setting up the blazegraph with all necessary data can take some time up to an hour.
+-  In addition to the input data upload, [download](https://doi.org/10.5281/zenodo.14646814) the output data generated by the full workflow and place it in the `data_submission/output/` folder.
 
-1. **Setup Blazegraph Namespaces:** 
+1. **Setup Blazegraph Namespaces** [Expected runtime: 60min]: 
    ```
    python main.py setup-reproducibility-blazegraph
    ```
@@ -157,12 +171,11 @@ The workflow consists of subprocesses executed via `main.py`. Follow these steps
    ├── regulations_height_change  # Planning-regulation-related n-quods for a height control change scenario
    ```
 
-2. **Perform Regulatory Analysis**:
-   Run the following to generate figures and tables for the 3D landuse planning paper.
+2. **Perform Regulatory Analysis** [Expected runtime: 10min]:
    ```
    python main.py perform-regulatory-analysis
    ```
-Analysis output names in the `output/analysis` directory correspond to tables and figures in the related paper. 
+This will generate figures and tables for the 3D landuse planning paper. Analysis output names in the `output/analysis` directory correspond to tables and figures in the related paper. 
 
 ## Tips and Troubleshooting:
 
