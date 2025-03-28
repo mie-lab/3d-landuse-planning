@@ -21,7 +21,7 @@ This repository provides a comprehensive framework for modeling and analyzing al
 
 ![Overview of the workflow.](resources/workflow.png)
 
-##System Requirements
+## System Requirements
 - Operating System: Windows (tested on Windows 10/11). For non-Windows users, see the notes below.
 - RAM: Minimum 16 GB (recommended 32 GB for smoother performance).
 - Disk Space: Ensure at least 15 GB of free storage space necessary for generated regulatory datasets.
