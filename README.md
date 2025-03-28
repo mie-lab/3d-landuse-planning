@@ -117,7 +117,7 @@ The workflow consists of subprocesses executed via `main.py`. Follow these steps
    ├── central_area_geom           # Central Area geometry n-quads
    ```
 
-2. **Instantiate Area-Based Regulations** [Expected runtime: 1 min]:
+2. **Instantiate Area-Based Regulations** [Expected runtime: 5 min]:
     Run the following to generate area-based planning regulations and its links to plots across Singapore and store it in the KG.
     ```
     python main.py instantiate-area-regulations
